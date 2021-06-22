@@ -2,6 +2,7 @@ import urllib.request
 import os
 import base64
 import re
+import datetime
 
 #定义一个读取源码的函数，方便后面代码的引用
 def url_open(url):
@@ -18,10 +19,16 @@ def url_open(url):
 #定义一个获取页码的函数
 def get_num(url):
     html = url_open(url).decode('utf-8')
-    a =re.search(r'"current-comment-page">([[]\d+[]])',html)
+    a =re.search(r'"current-comment-page">(\[\d+\])',html)
     b =a.group(1)
     c =re.search(r'\d+',b)
     return c.group()
+
+#获取当前日期
+def get_date():
+    today =datetime.date.today()
+    today_format =re.sub('-','',str(today))
+    return today_format
 
 #定义一个在已知地址寻找图片的函数
 def find_imgs(url):
@@ -43,25 +50,26 @@ def save_imgs(all_img_urls):
             f.write(each_img_html)
 
 def main(folder = 'girl pictures',pages = 10):
-    #在当前目录创建文件夹，名称girl pictures
-    os.mkdir(folder)
-    #os.chdir()方法用于改变当前工作目录到指定的路径.这里就是将路径切换到folder
-    os.chdir(folder)
+	    #在当前目录创建文件夹，名称girl pictures
+	    os.mkdir(folder)
+	    os.mkdir(folder)#创建新的同名文件夹
+            #os.chdir()方法用于改变当前工作目录到指定的路径.这里就是将路径切换到folder
+            os.chdir(folder)
 
-    url = 'http://jandan.net/girl'
-    page_num = int(get_num(url))
+            url = 'http://jandan.net/girl'
+            page_num = int(get_num(url))
 
-    for i in range(pages):
-        page_num -= i
-        #网址使用了加密技术，这里我们把解密后经过改写的地址再次加密，和其他字符串拼接，最终显示出网站使用的url
-        #base64的加密需要输入bytles格式，所以这里用encode()转换
-        #strip()是用来去除字符串首尾指定字符的，这里用来去除加密后产生的'b'
-        #eval()是用来去除字符串首尾的双引号的，这里因为格式化字符串时里面本身就带有引号，导致最终多了一对引号
-        code = '202106010' + '-' + str(page_num)
-        page_url = url +'/'+ eval(str(base64.b64encode(code.encode())).strip('b')) + '#comments'
-        all_img_urls = find_imgs(page_url)
-        save_imgs(all_img_urls)
-    
+            for i in range(pages):
+                page_num -= i
+                #网址使用了加密技术，这里我们把解密后经过改写的地址再次加密，和其他字符串拼接，最终显示出网站使用的url
+                #base64的加密需要输入bytles格式，所以这里用encode()转换
+                #strip()是用来去除字符串首尾指定字符的，这里用来去除加密后产生的'b'
+                #eval()是用来去除字符串首尾的双引号的，这里因为格式化字符串时里面本身就带有引号，导致最终多了一对引号
+                code = get_date() + '-' + str(page_num)
+                page_url = url +'/'+ eval(str(base64.b64encode(code.encode())).strip('b')) + '#comments'
+                all_img_urls = find_imgs(page_url)
+                save_imgs(all_img_urls)
+
 #if __name__ == '__main__'的意思是：当.py文件被直接运行时，if __name__ == '__main__'之下的代码块将被运行；当.py文件以模块形式被导入时，if __name__ == '__main__'之下的代码块不被运行。
 if __name__=='__main__':
     main()
